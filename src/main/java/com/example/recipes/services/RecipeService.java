@@ -1,5 +1,6 @@
 package com.example.recipes.services;
 
+import com.example.recipes.domain.recipe.Recipe;
 import com.example.recipes.domain.recipesList.RecipesList;
 import com.example.recipes.dto.recipe.RecipeResponseDTO;
 import com.example.recipes.dto.recipesList.RecipesListResponseDTO;
@@ -46,7 +47,18 @@ public class RecipeService {
         } catch (RuntimeException e) {
             throw new RuntimeException(e + "Unable to get recipes by id: " + listId);
         }
+    }
 
-
+    public RecipeResponseDTO getRecipeById(UUID id) {
+        Recipe recipe = recipesRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
+        return new RecipeResponseDTO(
+                recipe.getId(),
+                recipe.getName(),
+                recipe.getIngredientesList(),
+                recipe.getStepsList(),
+                recipe.getDescription(),
+                recipe.getRecipesList().getId()
+        );
     }
 }
