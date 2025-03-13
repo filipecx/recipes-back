@@ -2,8 +2,10 @@ package com.example.recipes.services;
 
 import com.example.recipes.domain.recipe.Recipe;
 import com.example.recipes.domain.recipesList.RecipesList;
+import com.example.recipes.dto.recipe.RecipeRequestDTO;
 import com.example.recipes.dto.recipe.RecipeResponseDTO;
 import com.example.recipes.dto.recipesList.RecipesListResponseDTO;
+import com.example.recipes.repository.RecipesListRepository;
 import com.example.recipes.repository.RecipesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 @Service
 public class RecipeService {
     private final RecipesRepository recipesRepository;
+    private final RecipesListRepository recipesListRepository;
     private final RecipesListService recipesListService;
 
     public List<RecipeResponseDTO> getAllRecipes() {
@@ -60,5 +63,33 @@ public class RecipeService {
                 recipe.getDescription(),
                 recipe.getRecipesList().getId()
         );
+    }
+
+    public RecipeResponseDTO addRecipe(RecipeRequestDTO recipeRequestDTO) {
+        Recipe newRecipe = new Recipe();
+        try {
+
+            RecipesList recipesList = recipesListService.getListObjById(recipeRequestDTO.listId());
+
+            newRecipe.setName(recipeRequestDTO.name());
+            newRecipe.setIngredientesList(recipeRequestDTO.ingredients());
+            newRecipe.setStepsList(recipeRequestDTO.steps());
+            newRecipe.setDescription(recipeRequestDTO.description());
+            newRecipe.setRecipesList(recipesList);
+
+            recipesRepository.save(newRecipe);
+
+            return new RecipeResponseDTO(
+                    newRecipe.getId(),
+                    newRecipe.getName(),
+                    newRecipe.getIngredientesList(),
+                    newRecipe.getStepsList(),
+                    newRecipe.getDescription(),
+                    newRecipe.getRecipesList().getId()
+            );
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

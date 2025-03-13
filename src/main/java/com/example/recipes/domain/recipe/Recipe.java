@@ -38,7 +38,7 @@ public class Recipe {
     @JoinColumn(name = "description_id")
     private Description description;
 
-    @ManyToOne(fetch = FetchType.LAZY)  // Muitos para Um (cada receita está associada a uma lista)
-    @JoinColumn(name = "recipes_list_id", referencedColumnName = "id")  // FK para RecipesList
+    @ManyToOne
+    @JoinColumn(name = "list_id", nullable = false)
     private RecipesList recipesList;
 }

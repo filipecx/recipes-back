@@ -30,4 +30,7 @@ public class RecipesList {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @OneToMany(mappedBy = "recipesList", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Recipe> recipes;
+
 }
