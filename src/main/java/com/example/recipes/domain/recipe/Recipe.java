@@ -2,6 +2,7 @@ package com.example.recipes.domain.recipe;
 
 import com.example.recipes.domain.description.Description;
 import com.example.recipes.domain.ingrediente.Ingrediente;
+import com.example.recipes.domain.recipesList.RecipesList;
 import com.example.recipes.domain.step.Step;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,4 +37,8 @@ public class Recipe {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "description_id")
     private Description description;
+
+    @ManyToOne(fetch = FetchType.LAZY)  // Muitos para Um (cada receita está associada a uma lista)
+    @JoinColumn(name = "recipes_list_id", referencedColumnName = "id")  // FK para RecipesList
+    private RecipesList recipesList;
 }
