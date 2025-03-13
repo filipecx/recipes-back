@@ -90,6 +90,30 @@ public class RecipeService {
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }
+    }
+    public RecipeResponseDTO updateRecipe(RecipeRequestDTO recipeRequestDTO, UUID id) {
+        Recipe recipe = recipesRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
 
+        recipe.setName(recipeRequestDTO.name());
+        recipe.setIngredientesList(recipeRequestDTO.ingredients());
+        recipe.setStepsList(recipeRequestDTO.steps());
+        recipe.setDescription(recipeRequestDTO.description());
+
+        recipesRepository.save(recipe);
+
+        return new RecipeResponseDTO(
+                recipe.getId(),
+                recipe.getName(),
+                recipe.getIngredientesList(),
+                recipe.getStepsList(),
+                recipe.getDescription(),
+                recipe.getRecipesList().getId()
+        );
+    }
+    public void deleteRecipe(UUID id) {
+        Recipe recipe = recipesRepository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
+        recipesRepository.delete(recipe);
     }
 }
