@@ -37,7 +37,7 @@ public class RecipeService {
     public List<RecipeResponseDTO> getRecipesByListId(UUID listId) {
         try {
             RecipesListResponseDTO recipesListResponseDTO = recipesListService.getListById(listId);
-            return this.recipesRepository.findAllByList_Id(listId).stream()
+            return this.recipesRepository.findAllByRecipesList_Id(listId).stream()
                     .map(recipe -> new RecipeResponseDTO(
                             recipe.getId(),
                             recipe.getName(),
