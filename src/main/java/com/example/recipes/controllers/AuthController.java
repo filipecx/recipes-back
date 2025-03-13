@@ -3,6 +3,7 @@ package com.example.recipes.controllers;
 import com.example.recipes.domain.user.User;
 import com.example.recipes.dto.user.UserRegisterRequestDTO;
 import com.example.recipes.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,7 +31,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Map<String, String> request) {
+    public ResponseEntity<String> login(@RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
         String username = request.get("username");
         String password = request.get("password");
 
@@ -39,6 +40,7 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
             SecurityContextHolder.getContext().setAuthentication(auth);
+            httpRequest.getSession().setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
             return ResponseEntity.ok("Success!");
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Fail!");
@@ -48,9 +50,6 @@ public class AuthController {
     public ResponseEntity<String> register(@RequestBody UserRegisterRequestDTO userRegisterRequestDTO) {
 
         try {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already being used");
-
-        } catch (RuntimeException e) {
             userService.registerUser(userRegisterRequestDTO);
 
             Authentication auth = authenticationManager.authenticate(
@@ -59,6 +58,8 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             return ResponseEntity.status(HttpStatus.CREATED).body("Success!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already being used");
         }
     }
 }

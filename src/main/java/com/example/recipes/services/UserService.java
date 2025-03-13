@@ -43,21 +43,25 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
 
+    public boolean isUsernameTaken(String username) {
+        return  this.userRepository.findByUsername(username).isPresent();
+    }
+
     public void registerUser(UserRegisterRequestDTO newUserData){
-        try {
-            this.getUserByUsername(newUserData.username());
-        } catch(RuntimeException error) {
-            String encryptedPassword = new BCryptPasswordEncoder().encode(newUserData.password());
-
-            User newUser = new User();
-
-            newUser.setEmail(newUserData.email());
-            newUser.setName(newUserData.name());
-            newUser.setUsername(newUserData.username());
-            newUser.setPassword(encryptedPassword);
-
-            this.userRepository.save(newUser);
+        if (isUsernameTaken(newUserData.username())) {
+            throw new RuntimeException("Username taken");
         }
+
+        String encryptedPassword = new BCryptPasswordEncoder().encode(newUserData.password());
+
+        User newUser = new User();
+
+        newUser.setEmail(newUserData.email());
+        newUser.setName(newUserData.name());
+        newUser.setUsername(newUserData.username());
+        newUser.setPassword(encryptedPassword);
+
+        this.userRepository.save(newUser);
     }
 
     public UserResponseDTO deleteUser(UUID userId){
@@ -79,10 +83,4 @@ public class UserService implements UserDetailsService {
         return this.userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
-/*
-    public UserResponseDTO authenticateUser(String username, String password){
-
-    }
-
-*/
 }

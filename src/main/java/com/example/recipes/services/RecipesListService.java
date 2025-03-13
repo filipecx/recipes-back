@@ -24,7 +24,7 @@ public class RecipesListService {
                 .map(recipesList -> new RecipesListResponseDTO(
                         recipesList.getId(),
                         recipesList.getName(),
-                        recipesList.getUser().getId()
+                        recipesList.getUser() != null? recipesList.getUser().getId() : null
                 ))
                 .collect(Collectors.toList());
     }
@@ -49,9 +49,9 @@ public class RecipesListService {
                 recipesList.getUser().getId());
     }
 
-    public RecipesListResponseDTO addList(RecipesListRequestDTO recipesListRequestDTO) {
+    public RecipesListResponseDTO addList(RecipesListRequestDTO recipesListRequestDTO, UUID userId) {
         RecipesList recipesList = new RecipesList();
-        UserResponseDTO userResponseDTO = userService.getUserById(recipesListRequestDTO.userId());
+        UserResponseDTO userResponseDTO = userService.getUserById(userId);
 
         User user = new User();
         user.setUsername(userResponseDTO.username());
@@ -61,6 +61,8 @@ public class RecipesListService {
 
         recipesList.setName(recipesListRequestDTO.name());
         recipesList.setUser(user);
+
+        recipesListRepository.save(recipesList);
 
         return new RecipesListResponseDTO(
                 recipesList.getId(),
