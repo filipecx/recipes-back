@@ -46,7 +46,6 @@ public class RecipesListController {
 
     @PostMapping
     public ResponseEntity<?> addList(@RequestBody RecipesListRequestDTO recipesListRequestDTO, @AuthenticationPrincipal UserDetails userDetails) {
-        System.out.println(userDetails.getUsername());
         try {
             User user = userService.getUserByUsername(userDetails.getUsername());
 
