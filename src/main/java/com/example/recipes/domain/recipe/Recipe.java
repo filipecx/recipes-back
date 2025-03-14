@@ -4,6 +4,7 @@ import com.example.recipes.domain.description.Description;
 import com.example.recipes.domain.ingrediente.Ingrediente;
 import com.example.recipes.domain.recipesList.RecipesList;
 import com.example.recipes.domain.step.Step;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,14 +30,17 @@ public class Recipe {
     private String name;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Ingrediente> ingredientesList;
+    @JsonManagedReference
+    private List<Ingrediente> ingredientesList = new ArrayList<>();
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Step> stepsList;
+    @JsonManagedReference
+    private List<Step> stepsList = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "description_id")
+    @OneToOne(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     private Description description;
+
+
 
     @ManyToOne
     @JoinColumn(name = "list_id", nullable = false)

@@ -56,7 +56,8 @@ public class RecipeController {
             RecipeResponseDTO recipeResponseDTO = recipeService.addRecipe(recipeRequestDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(recipeResponseDTO);
         } catch (RuntimeException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipe not created");
+            throw new RuntimeException(e);
+            //throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipe not created");
         }
     }
 

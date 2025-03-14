@@ -1,12 +1,14 @@
 package com.example.recipes.services;
 
+import com.example.recipes.domain.description.Description;
+import com.example.recipes.domain.ingrediente.Ingrediente;
 import com.example.recipes.domain.recipe.Recipe;
 import com.example.recipes.domain.recipesList.RecipesList;
+import com.example.recipes.domain.step.Step;
 import com.example.recipes.dto.recipe.RecipeRequestDTO;
 import com.example.recipes.dto.recipe.RecipeResponseDTO;
 import com.example.recipes.dto.recipesList.RecipesListResponseDTO;
-import com.example.recipes.repository.RecipesListRepository;
-import com.example.recipes.repository.RecipesRepository;
+import com.example.recipes.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class RecipeService {
+    private final IngredientRepository ingredientRepository;
+    private final DescriptionRepository descriptionRepository;
+    private final StepRepository stepRepository;
     private final RecipesRepository recipesRepository;
     private final RecipesListRepository recipesListRepository;
     private final RecipesListService recipesListService;
@@ -67,24 +72,48 @@ public class RecipeService {
 
     public RecipeResponseDTO addRecipe(RecipeRequestDTO recipeRequestDTO) {
         Recipe newRecipe = new Recipe();
+
         try {
-
+            // Salvando a receita (Recipe)
             RecipesList recipesList = recipesListService.getListObjById(recipeRequestDTO.listId());
-
             newRecipe.setName(recipeRequestDTO.name());
-            newRecipe.setIngredientesList(recipeRequestDTO.ingredients());
-            newRecipe.setStepsList(recipeRequestDTO.steps());
-            newRecipe.setDescription(recipeRequestDTO.description());
             newRecipe.setRecipesList(recipesList);
+            newRecipe = recipesRepository.save(newRecipe);  // Salvando e atribuindo o ID gerado
 
+            // Salvando a descrição (Description) com a referência à Recipe
+            Description description = new Description();
+            description.setRecipe(newRecipe);
+            //description.setRecipe(newRecipe);  // Agora, newRecipe tem um ID
+            descriptionRepository.save(description);
+
+            // Salvando os ingredientes (Ingredientes) com a referência à Recipe
+            List<Ingrediente> ingredients = recipeRequestDTO.ingredients();
+            for (Ingrediente ingredient : ingredients) {
+                ingredient.setRecipe(newRecipe);
+            }
+            ingredients = ingredientRepository.saveAll(ingredients);
+
+            // Salvando os passos (Steps) com a referência à Recipe
+            List<Step> steps = recipeRequestDTO.steps();
+            for (Step step : steps) {
+                step.setRecipe(newRecipe);
+            }
+            steps = stepRepository.saveAll(steps);
+
+            // Associando as listas na Recipe
+            newRecipe.setIngredientesList(ingredients);
+            newRecipe.setStepsList(steps);
+            newRecipe.setDescription(description);
+
+            // Salvando a receita com todos os dados associados
             recipesRepository.save(newRecipe);
 
             return new RecipeResponseDTO(
                     newRecipe.getId(),
                     newRecipe.getName(),
-                    newRecipe.getIngredientesList(),
-                    newRecipe.getStepsList(),
-                    newRecipe.getDescription(),
+                    ingredients,
+                    steps,
+                    description,
                     newRecipe.getRecipesList().getId()
             );
         } catch (RuntimeException e) {

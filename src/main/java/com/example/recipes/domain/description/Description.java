@@ -24,11 +24,11 @@ public class Description {
 
     private String text;
 
-    private Integer makes;
+    private String makes;
 
     private String time;
 
     @OneToOne
-    @JoinColumn(name = "recipe_id", nullable = false, unique = true)
+    @JoinColumn(name = "recipe_id")
     private Recipe recipe;
 }
