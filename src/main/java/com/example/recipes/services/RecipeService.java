@@ -27,122 +27,127 @@ public class RecipeService {
     private final RecipesListService recipesListService;
 
     public List<RecipeResponseDTO> getAllRecipes() {
-        return this.recipesRepository.findAll().stream()
-                .map(recipe -> new RecipeResponseDTO(
-                        recipe.getId(),
-                        recipe.getName(),
-                        recipe.getIngredientesList(),
-                        recipe.getStepsList(),
-                        recipe.getDescription(),
-                        recipe.getRecipesList() != null? recipe.getRecipesList().getId() : null
-                ))
-                .collect(Collectors.toList());
+        List<Recipe> recipeList = recipesRepository.findAll();
+        return recipeList.stream().map(
+                recipe -> this.getRecipeById(recipe.getId())
+        ).toList();
     }
 
-    public List<RecipeResponseDTO> getRecipesByListId(UUID listId) {
-        try {
-            RecipesListResponseDTO recipesListResponseDTO = recipesListService.getListById(listId);
-            return this.recipesRepository.findAllByRecipesList_Id(listId).stream()
-                    .map(recipe -> new RecipeResponseDTO(
-                            recipe.getId(),
-                            recipe.getName(),
-                            recipe.getIngredientesList(),
-                            recipe.getStepsList(),
-                            recipe.getDescription(),
-                            recipe.getRecipesList() != null? recipe.getRecipesList().getId() : null
-                    ))
-                    .collect(Collectors.toList());
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e + "Unable to get recipes by id: " + listId);
-        }
+    public List<RecipeResponseDTO> getRecipesByListId(UUID id) {
+            RecipesListResponseDTO recipesListResponseDTO = recipesListService.getListById(id);
+            List<Recipe> recipeList = recipesRepository.findAllByRecipesList_Id(id);
+
+            return recipeList.stream().map(
+                    recipe -> this.getRecipeById(recipe.getId())
+            ).toList();
     }
 
     public RecipeResponseDTO getRecipeById(UUID id) {
         Recipe recipe = recipesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
+        Description description = descriptionRepository.findByRecipe_Id(id);
+        List<Step> stepList = stepRepository.findAllByRecipe_Id(id);
+        List<Ingrediente> ingredienteList = ingredientRepository.findAllByRecipe_Id(id);
         return new RecipeResponseDTO(
                 recipe.getId(),
                 recipe.getName(),
-                recipe.getIngredientesList(),
-                recipe.getStepsList(),
-                recipe.getDescription(),
+                ingredienteList,
+                stepList,
+                description,
                 recipe.getRecipesList().getId()
         );
     }
 
     public RecipeResponseDTO addRecipe(RecipeRequestDTO recipeRequestDTO) {
+        RecipesList recipesList = recipesListService.getListObjById(recipeRequestDTO.listId());
+
         Recipe newRecipe = new Recipe();
+        newRecipe.setRecipesList(recipesList);
+        newRecipe.setName(recipeRequestDTO.name());
+        Recipe savedRecipe = recipesRepository.save(newRecipe);
 
-        try {
-            // Salvando a receita (Recipe)
-            RecipesList recipesList = recipesListService.getListObjById(recipeRequestDTO.listId());
-            newRecipe.setName(recipeRequestDTO.name());
-            newRecipe.setRecipesList(recipesList);
-            newRecipe = recipesRepository.save(newRecipe);  // Salvando e atribuindo o ID gerado
+        Description description = new Description();
+        description.setRecipe(savedRecipe);
+        description.setTime(recipeRequestDTO.description().getTime());
+        description.setText(recipeRequestDTO.description().getText());
+        description.setMakes(recipeRequestDTO.description().getMakes());
+        descriptionRepository.save(description);
 
-            // Salvando a descrição (Description) com a referência à Recipe
-            Description description = new Description();
-            description.setRecipe(newRecipe);
-            //description.setRecipe(newRecipe);  // Agora, newRecipe tem um ID
-            descriptionRepository.save(description);
+        List<Ingrediente> ingredienteList = recipeRequestDTO.ingredients()
+                .stream()
+                .map(ingrediente -> {
+                    Ingrediente ingredient = new Ingrediente();
+                    ingredient.setRecipe(savedRecipe);
+                    ingredient.setName(ingrediente.getName());
+                    ingredient.setQuantity(ingrediente.getQuantity());
+                    return ingredient;
+                })
+                .collect(Collectors.toList());
+        ingredientRepository.saveAll(ingredienteList);
 
-            // Salvando os ingredientes (Ingredientes) com a referência à Recipe
-            List<Ingrediente> ingredients = recipeRequestDTO.ingredients();
-            for (Ingrediente ingredient : ingredients) {
-                ingredient.setRecipe(newRecipe);
-            }
-            ingredients = ingredientRepository.saveAll(ingredients);
+        List<Step> setpList = recipeRequestDTO.steps()
+                .stream()
+                .map(step -> {
+                    Step newStep = new Step();
+                    newStep.setRecipe(newRecipe);
+                    newStep.setText(step.getText());
+                    newStep.setNumber(step.getNumber());
+                    return newStep;
+                })
+                .collect(Collectors.toList());
+        stepRepository.saveAll(setpList);
 
-            // Salvando os passos (Steps) com a referência à Recipe
-            List<Step> steps = recipeRequestDTO.steps();
-            for (Step step : steps) {
-                step.setRecipe(newRecipe);
-            }
-            steps = stepRepository.saveAll(steps);
-
-            // Associando as listas na Recipe
-            newRecipe.setIngredientesList(ingredients);
-            newRecipe.setStepsList(steps);
-            newRecipe.setDescription(description);
-
-            // Salvando a receita com todos os dados associados
-            recipesRepository.save(newRecipe);
-
-            return new RecipeResponseDTO(
-                    newRecipe.getId(),
-                    newRecipe.getName(),
-                    ingredients,
-                    steps,
-                    description,
-                    newRecipe.getRecipesList().getId()
-            );
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        return new RecipeResponseDTO(
+                newRecipe.getId(),
+                newRecipe.getName(),
+                ingredienteList,
+                setpList,
+                description,
+                newRecipe.getRecipesList().getId()
+        );
     }
     public RecipeResponseDTO updateRecipe(RecipeRequestDTO recipeRequestDTO, UUID id) {
         Recipe recipe = recipesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
+        Description description = descriptionRepository.findByRecipe_Id(id);
+        List<Step> stepList = stepRepository.findAllByRecipe_Id(id);
+        List<Ingrediente> ingredienteList = ingredientRepository.findAllByRecipe_Id(id);
 
         recipe.setName(recipeRequestDTO.name());
-        recipe.setIngredientesList(recipeRequestDTO.ingredients());
-        recipe.setStepsList(recipeRequestDTO.steps());
-        recipe.setDescription(recipeRequestDTO.description());
-
         recipesRepository.save(recipe);
+
+        stepList = stepRepository.saveAll(recipeRequestDTO.steps());
+
+        ingredienteList = ingredientRepository.saveAll(recipeRequestDTO.ingredients());
+
+        description.setText(recipeRequestDTO.description().getText());
+        description.setTime(recipeRequestDTO.description().getTime());
+        description.setMakes(recipeRequestDTO.description().getMakes());
+        description = descriptionRepository.save(description);
+
 
         return new RecipeResponseDTO(
                 recipe.getId(),
                 recipe.getName(),
-                recipe.getIngredientesList(),
-                recipe.getStepsList(),
-                recipe.getDescription(),
+                ingredienteList,
+                stepList,
+                description,
                 recipe.getRecipesList().getId()
         );
     }
     public void deleteRecipe(UUID id) {
         Recipe recipe = recipesRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
+
+        Description description = descriptionRepository.findByRecipe_Id(id);
+        descriptionRepository.delete(description);
+
+        List<Step> stepList = stepRepository.findAllByRecipe_Id(id);
+        stepRepository.deleteAll(stepList);
+
+        List<Ingrediente> ingredienteList = ingredientRepository.findAllByRecipe_Id(id);
+        ingredientRepository.deleteAll(ingredienteList);
+
         recipesRepository.delete(recipe);
     }
 }

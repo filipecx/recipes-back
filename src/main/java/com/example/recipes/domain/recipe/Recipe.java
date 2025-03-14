@@ -30,17 +30,15 @@ public class Recipe {
     private String name;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference  // Relacionamento gerenciado
     private List<Ingrediente> ingredientesList = new ArrayList<>();
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference  // Relacionamento gerenciado
     private List<Step> stepsList = new ArrayList<>();
 
     @OneToOne(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     private Description description;
-
-
 
     @ManyToOne
     @JoinColumn(name = "list_id", nullable = false)

@@ -1,6 +1,7 @@
 package com.example.recipes.domain.description;
 
 import com.example.recipes.domain.recipe.Recipe;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,5 +31,6 @@ public class Description {
 
     @OneToOne
     @JoinColumn(name = "recipe_id")
+    @JsonBackReference
     private Recipe recipe;
 }

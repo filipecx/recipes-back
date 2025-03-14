@@ -27,7 +27,7 @@ public class Step {
     private String text;
 
     @ManyToOne
-    @JoinColumn(name = "recipe_id", nullable = false)
+    @JoinColumn(name = "recipe_id",  nullable = false)
     @JsonBackReference
     private Recipe recipe;
 }

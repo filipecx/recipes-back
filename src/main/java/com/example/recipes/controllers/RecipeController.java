@@ -40,7 +40,7 @@ public class RecipeController {
         return ResponseEntity.ok().body(recipeResponseDTOS);
     }
 
-    @GetMapping("/{recipeId}")
+    @GetMapping("/recipe/{recipeId}")
     public ResponseEntity<RecipeResponseDTO> getRecipeById(@PathVariable UUID recipeId) {
         try {
             RecipeResponseDTO recipeResponseDTO = recipeService.getRecipeById(recipeId);
