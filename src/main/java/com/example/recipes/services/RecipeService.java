@@ -108,44 +108,35 @@ public class RecipeService {
     }
     public RecipeResponseDTO updateRecipe(RecipeRequestDTO recipeRequestDTO, UUID id) {
         try {
-            // Buscar a receita pelo ID
             Recipe recipe = recipesRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
 
-            // Buscar a descrição e as entidades relacionadas
             Description description = descriptionRepository.findByRecipe_Id(id);
             List<Step> stepList = stepRepository.findAllByRecipe_Id(id);
             List<Ingrediente> ingredienteList = ingredientRepository.findAllByRecipe_Id(id);
 
-            // Atualizar nome da receita
             recipe.setName(recipeRequestDTO.name());
-            // Não é necessário salvar novamente a receita, pois as entidades relacionadas já possuem as referências
-            // recipesRepository.save(recipe); // Comentado, já que não é necessário salvar a receita novamente
 
-            // Atualizar os passos
-            stepList.clear();  // Limpa os passos antigos
-            stepList.addAll(recipeRequestDTO.steps());  // Adiciona os novos passos
+            stepList.clear();
+            stepList.addAll(recipeRequestDTO.steps());
             stepList.forEach(step -> {
                 step.setRecipe(recipe);
                 step.setText(step.getText());
                 step.setNumber(step.getNumber());
             });
-            stepRepository.saveAll(stepList);  // Salva todos os passos atualizados
+            stepRepository.saveAll(stepList);
 
-            // Atualizar os ingredientes
-            ingredienteList.clear();  // Limpa os ingredientes antigos
-            ingredienteList.addAll(recipeRequestDTO.ingredients());  // Adiciona os novos ingredientes
+            ingredienteList.clear();
+            ingredienteList.addAll(recipeRequestDTO.ingredients());
             ingredienteList.forEach(ingrediente -> ingrediente.setRecipe(recipe));
-            ingredientRepository.saveAll(ingredienteList);  // Salva todos os ingredientes atualizados
+            ingredientRepository.saveAll(ingredienteList);
 
-            // Atualizar descrição
             description.setRecipe(recipe);
             description.setText(recipeRequestDTO.description().getText());
             description.setTime(recipeRequestDTO.description().getTime());
             description.setMakes(recipeRequestDTO.description().getMakes());
-            descriptionRepository.save(description);  // Salva a descrição atualizada
+            descriptionRepository.save(description);
 
-            // Retornar a resposta DTO com os dados atualizados
             return new RecipeResponseDTO(
                     recipe.getId(),
                     recipe.getName(),
