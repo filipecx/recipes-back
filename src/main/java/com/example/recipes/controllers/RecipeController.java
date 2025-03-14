@@ -61,17 +61,18 @@ public class RecipeController {
         }
     }
 
-    @PutMapping("/{recipeId}")
+    @PutMapping("/recipe/{recipeId}")
     public ResponseEntity<RecipeResponseDTO> updateRecipe(@RequestBody RecipeRequestDTO recipeRequestDTO, @PathVariable UUID recipeId) {
-        try {
+        System.out.println("Received request: " + recipeRequestDTO);
+       // try {
             RecipeResponseDTO recipeResponseDTO = recipeService.updateRecipe(recipeRequestDTO, recipeId);
             return ResponseEntity.status(HttpStatus.CREATED).body(recipeResponseDTO);
-        } catch (RuntimeException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipe not updated");
-        }
+       // } catch (RuntimeException e) {
+        //    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipe not updated");
+        //}
     }
 
-    @DeleteMapping("/{recipeId}")
+    @DeleteMapping("/recipe/{recipeId}")
     public ResponseEntity<?> deleteRecipe(@PathVariable UUID recipeId) {
         try {
             recipeService.deleteRecipe(recipeId);

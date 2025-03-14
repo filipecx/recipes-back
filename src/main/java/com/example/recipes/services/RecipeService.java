@@ -107,34 +107,59 @@ public class RecipeService {
         );
     }
     public RecipeResponseDTO updateRecipe(RecipeRequestDTO recipeRequestDTO, UUID id) {
-        Recipe recipe = recipesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
-        Description description = descriptionRepository.findByRecipe_Id(id);
-        List<Step> stepList = stepRepository.findAllByRecipe_Id(id);
-        List<Ingrediente> ingredienteList = ingredientRepository.findAllByRecipe_Id(id);
+        try {
+            // Buscar a receita pelo ID
+            Recipe recipe = recipesRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
 
-        recipe.setName(recipeRequestDTO.name());
-        recipesRepository.save(recipe);
+            // Buscar a descrição e as entidades relacionadas
+            Description description = descriptionRepository.findByRecipe_Id(id);
+            List<Step> stepList = stepRepository.findAllByRecipe_Id(id);
+            List<Ingrediente> ingredienteList = ingredientRepository.findAllByRecipe_Id(id);
 
-        stepList = stepRepository.saveAll(recipeRequestDTO.steps());
+            // Atualizar nome da receita
+            recipe.setName(recipeRequestDTO.name());
+            // Não é necessário salvar novamente a receita, pois as entidades relacionadas já possuem as referências
+            // recipesRepository.save(recipe); // Comentado, já que não é necessário salvar a receita novamente
 
-        ingredienteList = ingredientRepository.saveAll(recipeRequestDTO.ingredients());
+            // Atualizar os passos
+            stepList.clear();  // Limpa os passos antigos
+            stepList.addAll(recipeRequestDTO.steps());  // Adiciona os novos passos
+            stepList.forEach(step -> {
+                step.setRecipe(recipe);
+                step.setText(step.getText());
+                step.setNumber(step.getNumber());
+            });
+            stepRepository.saveAll(stepList);  // Salva todos os passos atualizados
 
-        description.setText(recipeRequestDTO.description().getText());
-        description.setTime(recipeRequestDTO.description().getTime());
-        description.setMakes(recipeRequestDTO.description().getMakes());
-        description = descriptionRepository.save(description);
+            // Atualizar os ingredientes
+            ingredienteList.clear();  // Limpa os ingredientes antigos
+            ingredienteList.addAll(recipeRequestDTO.ingredients());  // Adiciona os novos ingredientes
+            ingredienteList.forEach(ingrediente -> ingrediente.setRecipe(recipe));
+            ingredientRepository.saveAll(ingredienteList);  // Salva todos os ingredientes atualizados
 
+            // Atualizar descrição
+            description.setRecipe(recipe);
+            description.setText(recipeRequestDTO.description().getText());
+            description.setTime(recipeRequestDTO.description().getTime());
+            description.setMakes(recipeRequestDTO.description().getMakes());
+            descriptionRepository.save(description);  // Salva a descrição atualizada
 
-        return new RecipeResponseDTO(
-                recipe.getId(),
-                recipe.getName(),
-                ingredienteList,
-                stepList,
-                description,
-                recipe.getRecipesList().getId()
-        );
+            // Retornar a resposta DTO com os dados atualizados
+            return new RecipeResponseDTO(
+                    recipe.getId(),
+                    recipe.getName(),
+                    ingredienteList,
+                    stepList,
+                    description,
+                    recipe.getRecipesList().getId()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating recipe", e);
+        }
     }
+
+
     public void deleteRecipe(UUID id) {
         Recipe recipe = recipesRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Recipe not found by id: " + id));
