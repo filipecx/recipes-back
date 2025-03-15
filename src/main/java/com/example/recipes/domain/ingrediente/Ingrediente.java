@@ -1,6 +1,7 @@
 package com.example.recipes.domain.ingrediente;
 
 import com.example.recipes.domain.recipe.Recipe;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,5 +28,6 @@ public class Ingrediente {
 
     @ManyToOne
     @JoinColumn(name = "recipe_id", nullable = false)
+    @JsonBackReference
     private Recipe recipe;
 }
