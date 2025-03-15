@@ -49,6 +49,11 @@ public class RecipesListService {
                 recipesList.getUser().getId());
     }
 
+    public RecipesList getListObjById(UUID id) {
+        return recipesListRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("List not found"));
+    }
+
     public RecipesListResponseDTO addList(RecipesListRequestDTO recipesListRequestDTO, UUID userId) {
         RecipesList recipesList = new RecipesList();
         UserResponseDTO userResponseDTO = userService.getUserById(userId);
